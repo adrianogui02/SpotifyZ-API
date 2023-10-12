@@ -1,12 +1,14 @@
 const request = require('request');
 const querystring = require('querystring');
 const cookieParser = require('cookie-parser');
-const User = require('../../DB/Models/tokens'); // Importe o modelo de usuário
+const User = require('../../DB/Models/tokens');
+require('dotenv')
+dotenv.config()
 
-const client_id = 'f046925462574370acd7a0a74f54a10e'; // Substitua pelo seu Client ID
-const client_secret = '32b1d4ee74184aa191db0d4e459e44d7'; // Substitua pelo seu Client Secret
-const redirect_uri = 'http://localhost:8888/auth/callback'; // Substitua pelo seu URI de redirecionamento
-const stateKey = 'spotify_auth_state';
+const client_id = process.env.client_id
+const client_secret = process.env.client_secret
+const redirect_uri = process.env.redirect_uri
+const stateKey = process.env.stateKey
 
 
 const generateRandomString = (length) => {
@@ -59,8 +61,6 @@ const callback = (req, res) => {
       };
   
       request.post(authOptions, (error, response, body) => {
-        console.log('========TOKENS=========')
-        console.log(body)
         if (!error && response.statusCode === 200) {
           const access_token = body.access_token;
           const refresh_token = body.refresh_token;
@@ -75,8 +75,6 @@ const callback = (req, res) => {
           };
   
           request.get(userInfoOptions, (userError, userResponse, userBody) => {
-            console.log('========USER=========')
-            console.log(userBody)
             if (!userError && userResponse.statusCode === 200) {
               // Salve os tokens e os dados do usuário no MongoDB
               const user = new User({
@@ -125,8 +123,6 @@ const refresh_token = (req, res) => {
     };
   
     request.post(authOptions, (error, response, body) => {
-      console.log('========USER-REFRESH-TOKEN=========')
-      console.log(body)
       if (!error && response.statusCode === 200) {
         const access_token = body.access_token;
   
