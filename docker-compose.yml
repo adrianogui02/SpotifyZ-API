@@ -1,0 +1,16 @@
+volumes:
+  spotifyz-api-node-modules:
+    name: spotifyz-api-node-modules
+    driver: local
+
+services:
+  backend:
+    build: .
+    volumes:
+      - .:/home/spotifyz-api-node-modules
+      - spotifyz-api-node-modules:/home/spotifyz-api/node_modules
+    restart: always
+    command: npm start
+    ports:
+      - 8888:8888
+
