@@ -30,6 +30,6 @@ app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
 
     // Chamar a função refreshTokens a cada 1 minuto (60 segundos * 1000 milissegundos)
-    setInterval(refreshTokens, 30 * 60 * 1000);
-    setInterval(getRecentlyPlayedTracks, 10 * 1000);
+    setInterval(refreshTokens, 50 * 1000);
+    setInterval(getRecentlyPlayedTracks, 60 * 1000);
 });
