@@ -6,9 +6,8 @@ require('dotenv').config();
 
 const client_id = 'f046925462574370acd7a0a74f54a10e'
 const client_secret = '32b1d4ee74184aa191db0d4e459e44d7'
-const redirect_uri = process.env.RED_URL
-const stateKey = process.env.STATE_KEY
-
+const redirect_uri = 'http://localhost:8888/auth/callback'
+const stateKey = 'spotify_auth_state'
 
 const generateRandomString = (length) => {
   let text = '';
@@ -25,7 +24,7 @@ const login = (req, res) => {
     const state = generateRandomString(16);
     res.cookie(stateKey, state);
   
-    const scope = 'user-read-private user-read-email user-read-playback-state user-library-read user-top-read user-read-recently-played user-modify-playback-state user-read-playback-position user-read-playback-state user-read-currently-playing user-follow-read user-follow-modify playlist-read-collaborative playlist-modify-public playlist-read-private playlist-modify-private ugc-image-upload user-read-playback-position user-read-private user-read-email user-library-modify'; 
+    const scope = 'user-read-private user-read-email user-read-playback-state user-library-read user-top-read user-read-recently-played user-read-playback-position user-read-playback-state user-read-currently-playing user-follow-read playlist-read-collaborative playlist-read-private ugc-image-upload user-read-playback-position user-read-private user-read-email'; 
     res.redirect('https://accounts.spotify.com/authorize?' +
       querystring.stringify({
         response_type: 'code',

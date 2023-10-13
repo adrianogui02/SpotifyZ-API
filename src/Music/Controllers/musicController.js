@@ -44,8 +44,27 @@ const getRecentlyPlayedTracks = async () => {
 
       // Obter a última música tocada
       const lastPlayedTrack = musicResponse.data.items[0];
+      const album = lastPlayedTrack.track.album;
 
-
+      const musicData = {
+        name: lastPlayedTrack.track.name,
+        artists: lastPlayedTrack.track.artists
+          .map((artist) => artist.name)
+          .join(", "),
+        album: {
+          name: album.name,
+          album_type: album.album_type,
+          total_tracks: album.total_tracks,
+          release_date: album.release_date,
+          release_date_precision: album.release_date_precision,
+          images: album.images,
+        },
+        imageUrl:
+          album.images.length > 0 ? album.images[0].url : null,
+        playedAt: lastPlayedTrack.played_at,
+        duration_ms: lastPlayedTrack.track.duration_ms,
+        popularity: lastPlayedTrack.track.popularity,
+      };
 
       // Verificar se a música já está no banco de dados pelo played_at
       const existingMusic = await UserData.findOne({
@@ -64,20 +83,7 @@ const getRecentlyPlayedTracks = async () => {
         { spotifyId: userResponse.data.id },
         {
           $push: {
-            musicData: {
-              name: lastPlayedTrack.track.name,
-              artists: lastPlayedTrack.track.artists
-                .map((artist) => artist.name)
-                .join(", "),
-              album: lastPlayedTrack.track.album.name,
-              imageUrl:
-                lastPlayedTrack.track.album.images.length > 0
-                  ? lastPlayedTrack.track.album.images[0].url
-                  : null,
-              playedAt: lastPlayedTrack.played_at,
-              duration_ms: lastPlayedTrack.track.duration_ms, // Adiciona a duração da música em milissegundos
-              popularity: lastPlayedTrack.track.popularity, // Popularidade da música
-            },
+            musicData: musicData,
           },
         },
         { upsert: true } // Esta opção cria o documento se ele não existir

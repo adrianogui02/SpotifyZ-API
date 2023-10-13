@@ -1,27 +1,6 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
-const musicSchema = new Schema({
-  name: {
-    type: String,
-    required: true,
-  },
-  artists: {
-    type: String,
-    required: true,
-  },
-  album: {
-    type: String,
-    required: true,
-  },
-  imageUrl: {
-    type: String,
-  },
-  playedAt: {
-    type: Date,
-    required: true,
-  },
-});
 
 const userSchema = new Schema({
   spotifyId: {
@@ -36,7 +15,7 @@ const userSchema = new Schema({
     type: String,
     required: true,
   },
-  musicData: [musicSchema],
+  musicData:[],
 });
 
 const UserData = mongoose.model('UserData', userSchema);
