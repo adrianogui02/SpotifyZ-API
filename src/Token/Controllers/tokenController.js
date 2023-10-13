@@ -6,7 +6,7 @@ require('dotenv').config();
 
 const client_id = 'f046925462574370acd7a0a74f54a10e'
 const client_secret = '32b1d4ee74184aa191db0d4e459e44d7'
-const redirect_uri = 'http://localhost:8888/auth/callback'
+const redirect_uri = 'http://18.228.190.204:8888/auth/callback'
 const stateKey = 'spotify_auth_state'
 
 const generateRandomString = (length) => {
