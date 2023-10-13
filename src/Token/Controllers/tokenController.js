@@ -2,13 +2,12 @@ const request = require('request');
 const querystring = require('querystring');
 const cookieParser = require('cookie-parser');
 const User = require('../../DB/Models/tokens');
-require('dotenv')
-dotenv.config()
+require('dotenv').config();
 
-const client_id = process.env.client_id
-const client_secret = process.env.client_secret
-const redirect_uri = process.env.redirect_uri
-const stateKey = process.env.stateKey
+const client_id = 'f046925462574370acd7a0a74f54a10e'
+const client_secret = '32b1d4ee74184aa191db0d4e459e44d7'
+const redirect_uri = process.env.RED_URL
+const stateKey = process.env.STATE_KEY
 
 
 const generateRandomString = (length) => {
@@ -105,49 +104,52 @@ const callback = (req, res) => {
     }
 };
 
-const refresh_token = (req, res) => {
-    const { refresh_token }  = req.params;
-    console.log('Entrou na rota de atualização de token');
-    console.log('Refresh Token:', refresh_token);
-  
-    const authOptions = {
-      url: 'https://accounts.spotify.com/api/token',
-      form: {
-        grant_type: 'refresh_token',
-        refresh_token: refresh_token,
-      },
-      headers: {
-        'Authorization': 'Basic ' + Buffer.from(client_id + ':' + client_secret).toString('base64'),
-      },
-      json: true,
-    };
-  
-    request.post(authOptions, (error, response, body) => {
-      if (!error && response.statusCode === 200) {
-        const access_token = body.access_token;
-  
-        // Atualize o access token no banco de dados usando o refresh token
-        User.findOneAndUpdate(
-          { refreshToken: refresh_token },
-          { $set: { accessToken: access_token } },
-          { new: true },
-          (err, user) => {
-            if (err) {
-              console.error('Erro ao atualizar o access token:', err);
-              res.status(500).json({ error: 'server_error' });
-            } else {
-              res.status(200).json({ access_token: access_token });
-            }
-          }
-        );
-      } else {
-        res.status(response.statusCode).json(body);
-      }
+const refreshTokens = async () => {
+  try {
+    const users = await User.find(); // Obtenha todos os usuários cadastrados
+
+    // Para cada usuário, atualize o token de acesso usando o refresh token
+    users.forEach(async (user) => {
+      console.log(user.displayName)
+      console.log(user.refreshToken)
+      const authOptions = {
+        url: 'https://accounts.spotify.com/api/token',
+        form: {
+          grant_type: 'refresh_token',
+          refresh_token: user.refreshToken, // Use o refresh token do usuário atual
+        },
+        headers: {
+          'Authorization': 'Basic ' + Buffer.from(client_id + ':' + client_secret).toString('base64'),
+        },
+        json: true,
+      };
+
+      // Envie a solicitação para atualizar o token de acesso
+      request.post(authOptions, async (error, response, body) => {
+        console.log(response.statusCode)
+        if (!error && response.statusCode === 200) {
+          const access_token = body.access_token;
+
+          // Atualize o access token no banco de dados usando o refresh token
+          await User.findOneAndUpdate(
+            { refreshToken: user.refreshToken },
+            { $set: { accessToken: access_token } },
+            { new: true }
+          );
+
+          console.log(`Token de acesso atualizado para o usuário: ${user.displayName}`);
+        } else {
+          console.error('Erro ao atualizar o access token para o usuário:', user.displayName);
+        }
+      });
     });
+  } catch (error) {
+    console.error('Erro ao atualizar tokens de acesso:', error);
+  }
 };
 
 module.exports = {
   login,
   callback,
-  refresh_token,
+  refreshTokens,
 };
