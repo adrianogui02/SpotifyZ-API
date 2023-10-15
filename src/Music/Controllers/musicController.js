@@ -147,7 +147,89 @@ const getCurrentlyPlayingTrack = async (req, res) => {
   }
 };
 
+const getNumberOfSongsListenedOnDate = async (req, res) => {
+  const { username, date } = req.params;
+
+  // Verifique se a data é válida
+  const isValidDate = /^\d{4}-\d{2}-\d{2}$/.test(date);
+  if (!isValidDate) {
+    return res.status(400).json({ message: 'Formato de data inválido. Use YYYY-MM-DD.' });
+  }
+
+  try {
+    const user = await UserData.findOne({ displayName: username });
+    
+    if (!user) {
+      return res.status(404).json({ message: 'Usuário não encontrado.' });
+    }
+
+    // Converta a data fornecida para o formato ISO 8601 (sem a hora)
+    const isoDate = new Date(date);
+    
+    // Consulte no banco de dados com a data formatada
+    const songsListenedOnDate = user.musicData.filter(
+      (music) => {
+        const musicDate = new Date(music.playedAt); // Converte a string de playedAt para um objeto Date
+        return musicDate.toISOString().split('T')[0] === isoDate.toISOString().split('T')[0];
+      }
+    );
+
+    if (songsListenedOnDate.length === 0) {
+      return res.status(404).json({ message: 'Nenhuma música encontrada para esta data.' });
+    }
+
+    // Agrupar músicas por nome e contar quantas vezes cada uma foi ouvida
+    const musicCounts = {};
+    songsListenedOnDate.forEach((music) => {
+      const musicName = music.name;
+      if (musicCounts[musicName]) {
+        musicCounts[musicName].count++;
+      } else {
+        musicCounts[musicName] = {
+          count: 1,
+          // ... outras propriedades da música ...
+        };
+      }
+    });
+
+    // Converter o objeto em uma lista de músicas com contagem e posição
+    const musicList = Object.keys(musicCounts).map((musicName) => ({
+      name: musicName,
+      count: musicCounts[musicName].count,
+      // ... outras propriedades da música ...
+    }));
+
+    // Ordenar a lista por contagem (da mais ouvida para a menos ouvida)
+    musicList.sort((a, b) => b.count - a.count);
+
+    // Adicionar a propriedade 'position' com base na ordem da lista
+    musicList.forEach((music, index) => {
+      music.position = index + 1; // A posição começa de 1 (a música mais ouvida)
+    });
+
+    // Calcular o tempo total das músicas em segundos e em horas
+    const totalDurationSeconds = songsListenedOnDate.reduce((total, music) => {
+      return total + (music.duration_ms / 1000); // duration_ms está em milissegundos, então dividimos por 1000 para obter segundos
+    }, 0);
+    const totalDurationHours = totalDurationSeconds / 3600; // 3600 segundos em uma hora
+
+    return res.json({
+      message: `${username} ouviu ${songsListenedOnDate.length} músicas em ${isoDate.toISOString().split('T')[0]}.`,
+      musicList: musicList,
+      totalDurationSeconds: totalDurationSeconds,
+      totalDurationHours: totalDurationHours,
+    });
+  } catch (error) {
+    console.error('Erro ao obter músicas ouvidas na data:', error);
+    return res.status(500).json({ message: 'Erro interno do servidor.' });
+  }
+};
+
+
+
+
 module.exports = {
   getRecentlyPlayedTracks,
   getCurrentlyPlayingTrack,
+  getNumberOfSongsListenedOnDate,
 };
